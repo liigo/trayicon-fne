@@ -1,0 +1,81 @@
+HICON LoadIco (LPBYTE pData, INT nDataSize, BOOL blIsBigIcon)
+{
+	if (pData == NULL || nDataSize <= 0)  return NULL;
+
+	CMemFile file;
+	file.Attach (pData, nDataSize);
+
+	LPBYTE pBuf = NULL;
+
+	TRY
+	{
+		WORD wBuf [3];
+		if (file.Read ((LPBYTE)wBuf, sizeof (wBuf)) != sizeof (wBuf) ||
+				wBuf [0] != 0 || (wBuf [1] != 1 && wBuf [1] != 2) || wBuf [2] <= 0)
+			return NULL;
+
+		BOOL blIsIcon = wBuf [1] == 1;
+		INT nNumImages = (INT)wBuf [2];
+		ASSERT (nNumImages > 0);
+		if (nNumImages <= 0)  return NULL;
+
+		typedef struct
+		{
+			BYTE	bWidth;               // Width of the image
+			BYTE	bHeight;              // Height of the image (times 2)
+			BYTE	bColorCount;          // Number of colors in image (0 if >=8bpp)
+			BYTE	bReserved;            // Reserved
+			WORD	wPlanes;              // Color Planes
+			WORD	wBitCount;            // Bits per pixel
+			DWORD	dwBytesInRes;         // how many bytes in this resource?
+			DWORD	dwImageOffset;        // where in the file is this image
+		} ICONDIRENTRY, *LPICONDIRENTRY;
+
+		ICONDIRENTRY info;
+		for (INT nImageIndex = 0; nImageIndex < nNumImages; nImageIndex++)
+		{
+			file.Seek (nImageIndex * sizeof (ICONDIRENTRY) + sizeof (wBuf), CFile::begin);
+
+			if (file.Read ((LPBYTE)&info, sizeof (ICONDIRENTRY)) != sizeof (ICONDIRENTRY))
+				return NULL;
+
+			if (blIsBigIcon == TRUE ? info.bWidth == 32 : info.bWidth == 16)
+				break;
+		}
+		if (nImageIndex == nNumImages)
+			return NULL;
+
+		if (nImageIndex >= nNumImages)
+			nImageIndex = nNumImages - 1;
+
+		pBuf = new BYTE [info.dwBytesInRes];
+		if (pBuf == NULL)
+			return NULL;
+
+        file.Seek (info.dwImageOffset, CFile::begin);
+		if (file.Read (pBuf, info.dwBytesInRes) != info.dwBytesInRes)
+		{
+			delete [] pBuf;
+			return NULL;
+		}
+
+		LPBITMAPINFO pBitmapInfo = (LPBITMAPINFO)pBuf;
+
+		HICON hIcon = CreateIconFromResourceEx (pBuf, info.dwBytesInRes,
+				TRUE, 0x00030000, pBitmapInfo->bmiHeader.biWidth,
+				pBitmapInfo->bmiHeader.biHeight / 2, 0);
+
+		if (hIcon == NULL && pBitmapInfo->bmiHeader.biBitCount != 16)
+			hIcon = CreateIconFromResource (pBuf, info.dwBytesInRes, TRUE, 0x00030000);
+
+		delete [] pBuf;
+		return hIcon;
+	}
+	END_TRY
+
+	if (pBuf != NULL)
+		delete[] pBuf;
+
+	return NULL;
+}
+

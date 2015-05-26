@@ -1,0 +1,27 @@
+
+//!!! 必须从31位开始。
+#define __OS_WIN        0x80000000
+#define __OS_LINUX      0x40000000
+#define __OS_UNIX       0x20000000
+
+#define OS_ALL     (__OS_WIN | __OS_LINUX | __OS_UNIX)
+
+
+#define _CMD_OS(os)     ((os) >> 16)  // 用作转换os类型以便加入到m_wState。
+CMD_INFO.m_wState:  | _CMD_OS (__OS_WIN)
+
+
+#define _PROP_OS(os)     ((os) >> 16)  // 用作转换os类型以便加入到m_wState。
+UNIT_PROPERTY.m_wState:   | _PROP_OS (__OS_WIN)
+
+
+#define _EVENT_OS(os)     ((os) >> 1)  // 用作转换os类型以便加入到m_dwState。
+EVENT_INFO.m_dwState:	 | _EVENT_OS (__OS_WIN),
+
+
+#define _DT_OS(os)     (os)  // 用作转换os类型以便加入到m_dwState。
+LIB_DATA_TYPE_INFO.m_dwState:   | _DT_OS (__OS_WIN),
+
+
+#define _LIB_OS(os)     (os)  // 用作转换os类型以便加入到m_dwState。
+LIB_INFO.dwState   | _LIB_OS (__OS_WIN),

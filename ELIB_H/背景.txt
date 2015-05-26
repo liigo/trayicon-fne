@@ -1,0 +1,28 @@
+	#define		UD_PIC			    1009	// 为图片文件数据
+
+
+
+#define NAS_GET_HBITMAP                     1003
+    // dwParam1为图片数据指针，dwParam2为图片数据尺寸。
+    // 如果成功返回非NULL的HBITMAP句柄（注意使用完毕后释放），否则返回NULL。
+
+
+        HBITMAP hBitmap = (HBITMAP)NotifySys (NAS_GET_HBITMAP,
+                (DWORD)pPicData, (DWORD)nPicDataSize);
+        if (hBitmap == NULL)
+            break;
+
+CLR_DEFAULT
+
+
+
+ProcessSysBackColor (pUnit->m_info.m_clrBackColor)
+
+COLORREF ProcessSysBackColor (COLORREF clr)
+{
+	if (clr == CLR_DEFAULT)
+		return ::GetSysColor (COLOR_BTNFACE);
+	else
+		return clr;
+}
+

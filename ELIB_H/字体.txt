@@ -1,0 +1,82 @@
+
+void xxxx::init ()
+{
+	m_memFont.Free ();
+
+}
+
+BOOL xxxx::Serialize (CArchive& ar)
+{
+	m_memFont.Serialize (ar);
+}
+
+
+SetUnitFont (pUnit, pUnit->m_font, pUnit->m_info.m_memFont);
+
+ChangeFontProperty (pUnit, pUnit->m_font, pUnit->m_info.m_memFont, pPropertyVaule);
+
+
+CFreqmem m_memFont
+
+
+	CFont	m_font;
+
+
+	CFont font;
+	CFont* pOldFont = dc.GetCurrentFont ();
+	if (m_info.m_memFont.GetSize () == sizeof (LOGFONT) &&
+			MyCreateFont (font, (LOGFONT*)m_info.m_memFont.GetPtr ()))
+		dc.SelectObject (&font);
+	else
+		dc.SelectStockObject (DEFAULT_GUI_FONT);
+
+
+////////////////////////////////////////
+
+class CPIPrinter : public CPropertyInfo
+{
+public:
+    BEGIN_DEFINE_LANG_CNV
+        FONTMEM_CNV (m_memFont)
+        CSTRING_CNV (m_strPrintTitle)
+    END_DEFINE_LANG_CNV
+};
+
+
+////--------- lib.h
+
+#define ITF_LANG_CNV                    9       // 组件数据语言转换
+
+// dwState可以为以下宏值的组合。
+#define CNV_NULL        0
+#define CNV_FONTNAME    (1 << 0)    // 为转换字体名的语言(由于可能变长，
+                                    // ps中必须保证有足够的空间存放转换后的字体名)。
+typedef void (WINAPI* PFN_CNV)(char* ps, DWORD dwState, int nParam);
+// 组件数据语言转换，返回包含转换后组件数据的HGLOBAL句柄，失败返回NULL。
+typedef HGLOBAL (WINAPI *PFN_LANG_CNV) (LPBYTE pAllData, LPINT pnAllDataSize,
+		PFN_CNV fnCnv, int nParam);  // nParam必须原值传递给fnCnv的对应参数。
+
+////---------
+
+
+DEFINE_LANGCNV_CALLBACK (Printer)
+
+PFN_INTERFACE WINAPI GetInterface_Tab (INT nInterfaceNO)
+{
+	return nInterfaceNO == ITF_CREATE_UNIT ? (PFN_INTERFACE)Create_Tab :
+#ifndef __COMPILE_FNR
+			nInterfaceNO == ITF_DLG_INIT_CUSTOMIZE_DATA ? (PFN_INTERFACE)DlgInitCustomizeData_Tab :
+			nInterfaceNO == ITF_PROPERTY_UPDATE_UI ? (PFN_INTERFACE)PropertyUpdateUI_Tab :
+#endif
+			nInterfaceNO == ITF_NOTIFY_PROPERTY_CHANGED ? (PFN_INTERFACE)NotifyPropertyChanged_Tab :
+			nInterfaceNO == ITF_GET_ALL_PROPERTY_DATA ? (PFN_INTERFACE)GetAllPropertyData_Tab :
+			nInterfaceNO == ITF_GET_PROPERTY_DATA ? (PFN_INTERFACE)GetPropertyData_Tab :
+            nInterfaceNO == ITF_LANG_CNV ? (PFN_INTERFACE)GET_LANGCNV_CALLBACK_FNNAME (Tab) :
+			NULL;
+}
+
+
+static LIB_INFO s_LibInfo:
+
+/*lang*/ __COMPILE_LANG_VER,
+

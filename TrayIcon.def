@@ -1,0 +1,7 @@
+; NewLib.def : Declares the module parameters for the DLL.
+
+LIBRARY      "NewLib"
+DESCRIPTION  'NewLib Windows Dynamic Link Library'
+
+EXPORTS
+    GetNewInf
